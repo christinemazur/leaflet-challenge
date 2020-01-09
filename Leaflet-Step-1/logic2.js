@@ -3,10 +3,13 @@
 var earthquake_url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
 
 function markerSize(magnitude) {
-    return magnitude * 4;
+    return magnitude * 3;
 };
 
 var earthquake = new L.LayerGroup();
+
+// 'mag' is the magnitude of the earthquake under 'properties'
+//latlng gets the coordinates of the geojson point
 
 d3.json(earthquake_url, function (geoJson) {
     L.geoJSON(geoJson.features, {
@@ -23,7 +26,7 @@ d3.json(earthquake_url, function (geoJson) {
 
             }
         },
-
+// show the 'time' and the 'title' when click circle
         onEachFeature: function (feature, layer) {
             layer.bindPopup(
                 "<h4 style='text-align:center;'>" + new Date(feature.properties.time) +
@@ -74,18 +77,11 @@ function createMap() {
         id: 'mapbox.outdoors',
         accessToken: API_KEY
     });
-    var dark = L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-        attribution: 'Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>',
-        maxZoom: 13,
-        id: 'mapbox.dark',
-        accessToken: API_KEY
-    });
-
+   
     var baseLayers = {
         "Satellite": satellite,
         "Grayscale": grayscale,
-        "Outdoors": outdoors,
-        "Dark": dark       
+        "Outdoors": outdoors
     };
 
     var overlays = {
@@ -93,10 +89,10 @@ function createMap() {
         "Earthquakes": earthquake,
         
     };
-
+//center on italy and zoom out to see entire globe
     var mymap = L.map('map-id', {
-        center: [37.8968, -119.5828],
-        zoom: 3.5,
+        center: [41.8719, 12.5674],
+        zoom: 2.5,
         layers: [satellite, earthquake, faultline]
     });
 
