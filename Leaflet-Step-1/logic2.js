@@ -41,11 +41,11 @@ var faultline = new L.LayerGroup();
 
 function Color(magnitude) {
     if (magnitude > 5) {
-        return '#FF8C00'
-    } else if (magnitude > 4) {
         return 'red'
-    } else if (magnitude > 3) {
+    } else if (magnitude > 4) {
         return 'darkorange'
+    } else if (magnitude > 3) {
+        return 'lightorange'
     } else if (magnitude > 2) {
         return 'yellow'
     } else if (magnitude > 1) {
