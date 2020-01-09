@@ -1,4 +1,13 @@
-function createMap(bikeStations) {
+// Perform an API call to the USGS API to get earthquake information. Call createMarkers when complete
+var queryURL = ("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson");
+console.log(queryURL)
+// Perform a GET request to the query URL
+d3.json(queryURL, function(data) {
+  // Once we get a response, send the data.features object to the createFeatures function
+  createMap(data.features);
+});
+
+function createMap(earthQuakes) {
 
   // Create the tile layer that will be the background of our map
   var lightmap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token={accessToken}", {
@@ -13,16 +22,16 @@ function createMap(bikeStations) {
     "Light Map": lightmap
   };
 
-  // Create an overlayMaps object to hold the bikeStations layer
+  // Create an overlayMaps object to hold the earthquakes layer
   var overlayMaps = {
-    "Bike Stations": bikeStations
+    "EarthQuakes": earthQuakes
   };
 
   // Create the map object with options
   var map = L.map("map-id", {
-    center: [40.73, -74.0059],
-    zoom: 12,
-    layers: [lightmap, bikeStations]
+    center: [0, 0],
+    zoom: 2.5,
+    layers: [lightmap, earthQuakes]
   });
 
   // Create a layer control, pass in the baseMaps and overlayMaps. Add the layer control to the map
@@ -33,28 +42,60 @@ function createMap(bikeStations) {
 
 function createMarkers(response) {
 
-  // Pull the "stations" property off of response.data
-  var stations = response.data.stations;
+  // Pull the "geometry" property off of response.data (will this work since the field name has a colon : ?)
+  var geometry = response.data.geometry;
 
-  // Initialize an array to hold bike markers
-  var bikeMarkers = [];
+  // Initialize an array to hold quake markers
+  var quakeMarkers = [];
 
-  // Loop through the stations array
-  for (var index = 0; index < stations.length; index++) {
-    var station = stations[index];
+  // Loop through the geometry array
+  for (var index = 0; index < geometry.length; index++) {
+    var geometry = geometry[index];
 
-    // For each station, create a marker and bind a popup with the station's name
-    var bikeMarker = L.marker([station.lat, station.lon])
-      .bindPopup("<h3>" + station.name + "<h3><h3>Capacity: " + station.capacity + "<h3>");
+    // For each geometry, create a marker and bind a popup with the geometry's 
+    var quakeMarker = L.marker([geometry])
+      .bindPopup("<h3>" + geometry.Point + "<h3><h3>Coordinates: " + geometry.coordinates + "<h3>");
 
-    // Add the marker to the bikeMarkers array
-    bikeMarkers.push(bikeMarker);
+    // Add the marker to the quakeMarkers array
+    quakeMarkers.push(quakeMarker);
   }
 
-  // Create a layer group made from the bike markers array, pass it into the createMap function
-  createMap(L.layerGroup(bikeMarkers));
+  // Create a layer group made from the quake markers array, pass it into the createMap function
+  createMap(L.layerGroup(quakeMarkers));
+
+  //create the legend
+  var legend = L.control({position: 'bottomright'});
+
+  legend.onAdd = function (map) {
+  	var div = L.DomUtil.create('div', 'info legend');
+  	var grades = ["0-1", "1-2", "2-3", "3-4", "4-5", "5+"];
+    var color = ["#00ccbc","#90eb9d","#f9d057","#f29e2e","#e76818","#d7191c"];
+
+  	// loop through our density intervals and generate a label with a colored square for each interval
+  	for (var i = 0; i < grades.length; i++) {
+  		div.innerHTML +=
+  			'<p style="margin-left: 15px">' + '<i style="background:' + color[i] + ' "></i>' + '&nbsp;&nbsp;' + grades[i]+ '<\p>';
+  	}
+
+  	return div;
+  };
+
+  //Add the legend by default
+  legend.addTo(myMap)
+
+  //Overlay listener for adding
+  myMap.on('overlayadd', function(a) {
+    //Add the legend
+    legend.addTo(myMap);
+  });
+
+  //Overlay listener for remove
+  myMap.on('overlayremove', function(a) {
+    //Remove the legend
+    myMap.removeControl(legend);
+  });
+
 }
 
 
-// Perform an API call to the Citi Bike API to get station information. Call createMarkers when complete
-d3.json("https://gbfs.citibikenyc.com/gbfs/en/station_information.json", createMarkers);
+
